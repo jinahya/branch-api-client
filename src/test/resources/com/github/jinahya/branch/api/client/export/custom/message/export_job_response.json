@@ -1,0 +1,10 @@
+{
+  "errors": [
+    {
+      "message": "Limit is exceeded for org-525983469347282987, retry after 3418 seconds",
+      "error_code": 7
+    }
+  ],
+  "handle": "handle",
+  "export_job_status_url": "exportJobStatusUrl"
+}
