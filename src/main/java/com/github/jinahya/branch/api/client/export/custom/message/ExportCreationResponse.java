@@ -21,6 +21,8 @@ import static com.github.jinahya.branch.api.client.BranchApiClientConstants.Bean
 public class ExportCreationResponse
         extends AbstractCustomExportMessage {
 
+    private static final long serialVersionUID = -552319222266754714L;
+
     @Override
     public String toString() {
         return super.toString() + '{'

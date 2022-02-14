@@ -5,7 +5,10 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
@@ -44,6 +47,27 @@ public final class BranchApiClientUtilities {
             return function.apply(OBJECT_MAPPER.reader());
         }
 
+        public static <T> T readValue(final Class<T> rtype, final Class<?>[] ptypes, final Object... args) {
+            Objects.requireNonNull(rtype, "rtype is null");
+            Objects.requireNonNull(ptypes, "ptypes is null");
+            Objects.requireNonNull(args, "args");
+            return applyObjectReader(r -> {
+                try {
+                    final MethodType type = MethodType.methodType(Object.class, ptypes);
+                    final var handle = MethodHandles.lookup().findVirtual(ObjectReader.class, "readValue", type);
+                    final var result = handle.bindTo(r.forType(rtype)).invokeWithArguments(args);
+                    return rtype.cast(result);
+                } catch (final Throwable t) {
+                    throw new RuntimeException(t);
+                }
+            });
+        }
+
+        public static <T> T readValue(final Class<T> rtype, final InputStream src) {
+            Objects.requireNonNull(src, "src is null");
+            return readValue(rtype, new Class<?>[]{InputStream.class}, src);
+        }
+
         /**
          * Applies an instance of {@link ObjectWriter} to specified function and returns the result.
          *
@@ -54,6 +78,22 @@ public final class BranchApiClientUtilities {
         public static <R> R applyObjectWriter(final Function<? super ObjectWriter, ? extends R> function) {
             Objects.requireNonNull(function, "function is null");
             return function.apply(OBJECT_MAPPER.writer());
+        }
+
+        public static <R> R applyObjectWriterUnchecked(final Function<? super ObjectWriter, ? extends R> function) {
+            return applyObjectWriter(r -> {
+                try {
+                    return function.apply(r);
+                } catch (final Exception e) {
+                    if (e instanceof IOException) {
+                        throw new UncheckedIOException((IOException) e);
+                    }
+                    if (e instanceof RuntimeException) {
+                        throw e;
+                    }
+                    throw new RuntimeException(e);
+                }
+            });
         }
 
         private Jackson() {

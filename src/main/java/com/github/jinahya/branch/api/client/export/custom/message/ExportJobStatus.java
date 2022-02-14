@@ -16,6 +16,8 @@ import javax.validation.constraints.PositiveOrZero;
 public class ExportJobStatus
         extends AbstractCustomExportMessage {
 
+    private static final long serialVersionUID = -3194009377921997649L;
+
     @Override
     public String toString() {
         return super.toString() + '{'

@@ -13,10 +13,10 @@ import static com.github.jinahya.branch.api.client.BranchApiClientUtilities.Jack
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
-class ExportCreationRequestTest
+class ExportCreationExportRequestTest
         extends AbstractCustomExportMessageTest<ExportCreationRequest> {
 
-    ExportCreationRequestTest() {
+    ExportCreationExportRequestTest() {
         super(ExportCreationRequest.class);
     }
 

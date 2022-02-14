@@ -6,12 +6,16 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @SuperBuilder
-public abstract class AbstractMessage {
+public abstract class AbstractMessage
+        implements Serializable {
+
+    private static final long serialVersionUID = 762766242771418378L;
 
     @Override
     public String toString() {

@@ -31,6 +31,8 @@ import java.util.Set;
 public class ExportCreationRequest
         extends AbstractCustomExportMessage {
 
+    private static final long serialVersionUID = 136177180459030742L;
+
     public static final String RESPONSE_FORMAT_JSON = "json";
 
     public static final String RESPONSE_FORMAT_CSV = "csv";

@@ -48,7 +48,7 @@ import static com.github.jinahya.branch.api.client.BranchApiClientUtilities.Jack
 public class CustomExportClient
         extends AbstractClient {
 
-    private static final URI EXPORT_REQUEST_URI = URI.create("https://api2.branch.io/v2/logs");
+    private static final String EXPORT_REQUEST_URI = "https://api2.branch.io/v2/logs";
 
     @Override
     public String toString() {
@@ -115,6 +115,9 @@ public class CustomExportClient
             @javax.validation.Valid @javax.validation.constraints.NotNull
             @Valid @NotNull final ExportCreationResponse exportCreationResponse) {
         Objects.requireNonNull(exportCreationResponse, "exportJobResponse is null");
+        if (exportCreationResponse.hasErrors()) {
+            throw new IllegalArgumentException("has errors: " + exportCreationResponse);
+        }
         final var uri = URI.create(exportCreationResponse.getExportJobStatusUrl());
         final var request = HttpRequest.newBuilder()
                 .GET()
