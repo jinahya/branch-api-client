@@ -1,19 +1,22 @@
 package com.github.jinahya.branch.api.client.export.custom;
 
-import com.github.jinahya.branch.api.client.export.custom.message.ExportCreationRequest;
-import com.github.jinahya.branch.api.client.export.custom.message.ExportJobStatus;
+import com.github.jinahya.branch.api.client.export.custom.message.ExportRequest;
+import com.github.jinahya.branch.api.client.export.custom.message.ExportStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
@@ -44,7 +47,7 @@ class CustomExportClientIT {
                 .connectTimeout(Duration.ofSeconds(1L))
                 .timeout(Duration.ofSeconds(2L))
                 .build();
-        final var request = ExportCreationRequest.builder()
+        final var request = ExportRequest.builder()
                 .reportType(reportType)
                 .startDateLocal(LocalDateTime.now().minusDays(1L).minusHours(1L))
                 .endDateLocal(LocalDateTime.now().minusDays(1L))
@@ -58,19 +61,44 @@ class CustomExportClientIT {
         if (response.hasErrors(v -> log.error("error: {}", v))) {
             return;
         }
-        ExportJobStatus status = null;
+        ExportStatus status = null;
         for (int i = 0; i < 1024; i++) {
+            Thread.sleep(TimeUnit.SECONDS.toMillis(8L));
             status = client.checkStatus(response).get();
             log.debug("status: {}", status);
             if (status.isCompleted()) {
                 break;
             }
-            Thread.sleep(TimeUnit.SECONDS.toMillis(8L));
+        }
+        if (!status.isCompleted()) {
+            log.error("uncompleted status");
+            return;
         }
         try (var input = client.readExported(status).get();
              var reader = new BufferedReader(new InputStreamReader(input, StandardCharsets.UTF_8));
              var lines = reader.lines()) {
             lines.forEach(l -> log.debug("line: {}", l));
         }
+        client.downloadExportedAndRead(status, c -> {
+            log.debug("channel: {}", c);
+            if (ThreadLocalRandom.current().nextBoolean()) {
+                try {
+                    c.close();
+                } catch (final IOException ioe) {
+                    throw new UncheckedIOException(ioe);
+                }
+            }
+            return null;
+        });
+        client.downloadExportedAndStream(status, s -> {
+            log.debug("stream: {}", s);
+            s.forEach(l -> {
+                log.debug("line: {}", l);
+            });
+            if (ThreadLocalRandom.current().nextBoolean()) {
+                s.close();
+            }
+            return null;
+        });
     }
 }

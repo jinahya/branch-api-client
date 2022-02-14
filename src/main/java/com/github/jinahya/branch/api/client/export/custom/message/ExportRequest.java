@@ -28,7 +28,7 @@ import java.util.Set;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @SuperBuilder
-public class ExportCreationRequest
+public class ExportRequest
         extends AbstractCustomExportMessage {
 
     private static final long serialVersionUID = 136177180459030742L;

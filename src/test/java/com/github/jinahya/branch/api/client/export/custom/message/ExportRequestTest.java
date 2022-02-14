@@ -13,16 +13,16 @@ import static com.github.jinahya.branch.api.client.BranchApiClientUtilities.Jack
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
-class ExportCreationExportRequestTest
-        extends AbstractCustomExportMessageTest<ExportCreationRequest> {
+class ExportRequestTest
+        extends AbstractCustomExportMessageTest<ExportRequest> {
 
-    ExportCreationExportRequestTest() {
-        super(ExportCreationRequest.class);
+    ExportRequestTest() {
+        super(ExportRequest.class);
     }
 
     @Test
     void write__() throws JsonProcessingException {
-        final var built = ExportCreationRequest.builder()
+        final var built = ExportRequest.builder()
                 .reportType("reportType")
                 .startDateLocal(LocalDateTime.now().minusDays(1L).minusHours(1L))
                 .endDateLocal(LocalDateTime.now().minusDays(1L))

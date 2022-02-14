@@ -1,5 +1,6 @@
 package com.github.jinahya.branch.api.client;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -68,6 +69,11 @@ public final class BranchApiClientUtilities {
             return readValue(rtype, new Class<?>[]{InputStream.class}, src);
         }
 
+        public static <T> T readValue(final Class<T> rtype, final String src) {
+            Objects.requireNonNull(src, "src is null");
+            return readValue(rtype, new Class<?>[]{String.class}, src);
+        }
+
         /**
          * Applies an instance of {@link ObjectWriter} to specified function and returns the result.
          *
@@ -80,18 +86,12 @@ public final class BranchApiClientUtilities {
             return function.apply(OBJECT_MAPPER.writer());
         }
 
-        public static <R> R applyObjectWriterUnchecked(final Function<? super ObjectWriter, ? extends R> function) {
-            return applyObjectWriter(r -> {
+        public static String writeValueAsString(final Object value) {
+            return applyObjectWriter(w -> {
                 try {
-                    return function.apply(r);
-                } catch (final Exception e) {
-                    if (e instanceof IOException) {
-                        throw new UncheckedIOException((IOException) e);
-                    }
-                    if (e instanceof RuntimeException) {
-                        throw e;
-                    }
-                    throw new RuntimeException(e);
+                    return w.writeValueAsString(value);
+                } catch (final JsonProcessingException jpe) {
+                    throw new UncheckedIOException(jpe);
                 }
             });
         }

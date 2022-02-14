@@ -18,7 +18,7 @@ import static com.github.jinahya.branch.api.client.BranchApiClientConstants.Bean
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @SuperBuilder
-public class ExportCreationResponse
+public class ExportResponse
         extends AbstractCustomExportMessage {
 
     private static final long serialVersionUID = -552319222266754714L;
