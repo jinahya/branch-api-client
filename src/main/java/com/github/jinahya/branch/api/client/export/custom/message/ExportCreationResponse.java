@@ -1,5 +1,6 @@
 package com.github.jinahya.branch.api.client.export.custom.message;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -15,7 +16,7 @@ import static com.github.jinahya.branch.api.client.BranchApiClientConstants.Bean
 
 @Setter
 @Getter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @SuperBuilder
 public class ExportCreationResponse
         extends AbstractCustomExportMessage {
@@ -44,10 +45,22 @@ public class ExportCreationResponse
         return exportJobStatusUrl == null || exportJobStatusUrl.isBlank();
     }
 
+    /**
+     * Returns the value of {@code $.errors}.
+     *
+     * @return an optional of the value of {@code $.errors}.
+     */
     public Optional<Object> getErrors() {
         return Optional.ofNullable(getUnknownProperties().get("errors"));
     }
 
+    /**
+     * Checks whether this message has a value of {@code $.errors}, accepts to specified consumer if and only if it
+     * exists, returns a boolean value.
+     *
+     * @param consumer the consumer which accepts the value of {@code $.errors}.
+     * @return {@code true} if this message has a value of {@code $.errors}; {@code false} otherwise.
+     */
     public boolean hasErrors(final Consumer<Object> consumer) {
         Objects.requireNonNull(consumer, "consumer is null");
         return getErrors()
@@ -60,6 +73,7 @@ public class ExportCreationResponse
 
     public boolean hasErrors() {
         return hasErrors(v -> {
+            // does nothing
         });
     }
 

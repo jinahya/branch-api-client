@@ -32,11 +32,25 @@ public final class BranchApiClientUtilities {
 
     public static final class Jackson {
 
+        /**
+         * Applies an instance of {@link ObjectReader} to specified function and returns the result.
+         *
+         * @param function the function.
+         * @param <R>      result type parameter
+         * @return the result of the {@code function}.
+         */
         public static <R> R applyObjectReader(final Function<? super ObjectReader, ? extends R> function) {
             Objects.requireNonNull(function, "function is null");
             return function.apply(OBJECT_MAPPER.reader());
         }
 
+        /**
+         * Applies an instance of {@link ObjectWriter} to specified function and returns the result.
+         *
+         * @param function the function.
+         * @param <R>      result type parameter
+         * @return the result of the {@code function}.
+         */
         public static <R> R applyObjectWriter(final Function<? super ObjectWriter, ? extends R> function) {
             Objects.requireNonNull(function, "function is null");
             return function.apply(OBJECT_MAPPER.writer());

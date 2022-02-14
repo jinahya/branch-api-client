@@ -26,14 +26,14 @@ public class ExportJobStatus
                + '}';
     }
 
-    @javax.validation.constraints.AssertTrue
-    @AssertTrue
+//    @javax.validation.constraints.AssertTrue
+//    @AssertTrue
     public boolean isCodeSuccessful() {
         return code == 200;
     }
 
-    @javax.validation.constraints.AssertTrue
-    @AssertTrue
+//    @javax.validation.constraints.AssertTrue
+//    @AssertTrue
     public boolean isCompleted() {
         return "complete".equals(status);
     }

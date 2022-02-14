@@ -22,8 +22,13 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse.BodyHandlers;
+import java.nio.channels.FileChannel;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 
 import static com.github.jinahya.branch.api.client.BranchApiClientConstants.Http.HEADER_ACCEPT;
 import static com.github.jinahya.branch.api.client.BranchApiClientConstants.Http.HEADER_ACCESS_TOKEN;
@@ -57,6 +62,8 @@ public class CustomExportClient
      * @param exportCreationRequest a request.
      * @return a future of response.
      */
+    @javax.validation.constraints.NotNull
+    @NotNull
     public CompletableFuture<ExportCreationResponse> requestExport(
             @javax.validation.Valid @javax.validation.constraints.NotNull
             @Valid @NotNull final ExportCreationRequest exportCreationRequest) {
@@ -74,10 +81,10 @@ public class CustomExportClient
                 .header(HEADER_CONTENT_TYPE, MEDIA_TYPE_APPLICATION_JSON)
                 .header(HEADER_ACCEPT, MEDIA_TYPE_APPLICATION_JSON)
                 .header(HEADER_ACCESS_TOKEN, accessToken)
-                .timeout(timeout)
+                .timeout(timeout())
                 .build();
         final var client = HttpClient.newBuilder()
-                .connectTimeout(connectTimeout)
+                .connectTimeout(connectTimeout())
                 .build();
         return client.sendAsync(request, BodyHandlers.ofString())
                 .thenApply(r -> {
@@ -102,6 +109,8 @@ public class CustomExportClient
      * @param exportCreationResponse a log export response.
      * @return a future of response.
      */
+    @javax.validation.constraints.NotNull
+    @NotNull
     public CompletableFuture<ExportJobStatus> checkStatus(
             @javax.validation.Valid @javax.validation.constraints.NotNull
             @Valid @NotNull final ExportCreationResponse exportCreationResponse) {
@@ -112,10 +121,10 @@ public class CustomExportClient
                 .uri(uri)
                 .header(HEADER_ACCEPT, MEDIA_TYPE_APPLICATION_JSON)
                 .header(HEADER_ACCESS_TOKEN, accessToken)
-                .timeout(timeout)
+                .timeout(timeout())
                 .build();
         final var client = HttpClient.newBuilder()
-                .connectTimeout(connectTimeout)
+                .connectTimeout(connectTimeout())
                 .build();
         return client.sendAsync(request, BodyHandlers.ofString())
                 .thenApply(r -> {
@@ -137,24 +146,26 @@ public class CustomExportClient
     /**
      * Reads an exported log.
      *
-     * @param exportJobStatus a {@link ExportJobStatus#isCompleted() completed} exportation job status.
+     * @param exportJobStatus a {@link ExportJobStatus#isCompleted() completed} job status.
      * @return a future of log stream.
      */
+    @javax.validation.constraints.NotNull
+    @NotNull
     public CompletableFuture<InputStream> readExported(
             @javax.validation.Valid @javax.validation.constraints.NotNull
             @Valid @NotNull final ExportJobStatus exportJobStatus) {
         Objects.requireNonNull(exportJobStatus, "exportJobStatus is null");
         if (!exportJobStatus.isCompleted()) {
-            throw new IllegalArgumentException("not completed: " + exportJobStatus.getStatus());
+            throw new IllegalArgumentException("not completed: " + exportJobStatus);
         }
         final var uri = URI.create(exportJobStatus.getResponseUrl());
         final var request = HttpRequest.newBuilder()
                 .GET()
                 .uri(uri)
-                .timeout(timeout)
+                .timeout(timeout())
                 .build();
         final var client = HttpClient.newBuilder()
-                .connectTimeout(connectTimeout)
+                .connectTimeout(connectTimeout())
                 .build();
         return client.sendAsync(request, BodyHandlers.ofInputStream())
                 .thenApply(r -> {
@@ -163,6 +174,37 @@ public class CustomExportClient
                         throw new RuntimeException("unsuccessful status code: " + statusCode);
                     }
                     return r.body();
+                });
+    }
+
+    /**
+     * Downloads an exported log to a file and applies to specified function.
+     *
+     * @param exportJobStatus a {@link ExportJobStatus#isCompleted() completed} exportation job status.
+     * @param logFileFunction a function to which the file is applied.
+     * @return a future of desired result.
+     */
+    @javax.validation.constraints.NotNull
+    @NotNull
+    public <R> CompletableFuture<R> downloadExportedAndRead(
+            @javax.validation.Valid @javax.validation.constraints.NotNull
+            @Valid @NotNull final ExportJobStatus exportJobStatus,
+            final Function<? super ReadableByteChannel, ? extends R> logFileFunction) {
+        return readExported(exportJobStatus)
+                .thenApply(s -> {
+                    try {
+                        final var path = Files.createTempFile("prefix", "suffix");
+                        final var bytes = Files.copy(s, path);
+                        try {
+                            try (var channel = FileChannel.open(path, StandardOpenOption.READ)) {
+                                return logFileFunction.apply(channel);
+                            }
+                        } finally {
+                            Files.delete(path);
+                        }
+                    } catch (final IOException ioe) {
+                        throw new UncheckedIOException(ioe);
+                    }
                 });
     }
 
