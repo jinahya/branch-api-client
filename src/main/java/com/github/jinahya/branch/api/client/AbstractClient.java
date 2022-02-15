@@ -10,57 +10,71 @@ import lombok.experimental.SuperBuilder;
 
 import javax.validation.constraints.AssertTrue;
 import javax.validation.constraints.NotNull;
+import java.lang.System.Logger.Level;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.net.http.HttpResponse.BodyHandler;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.time.Duration;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.function.IntPredicate;
 
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 @SuperBuilder
-public abstract class AbstractClient {
+public abstract class AbstractClient
+        implements IClient {
+
+    private static final System.Logger log = System.getLogger(AbstractClient.class.getName());
 
     private static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(16L);
 
     private static final Duration DEFAULT_CONNECT_TIMEOUT = Duration.ofSeconds(4L);
 
-    protected static <T> Function<HttpResponse<T>, T> checkStatusCode(
-            final IntPredicate predicate) {
-        Objects.requireNonNull(predicate, "predicate is null");
+    /**
+     * Returns a function tests the {@link HttpResponse#statusCode() status code} of a {@link HttpResponse} against
+     * specified predicate and throws a runtime exception when the test fails.
+     *
+     * @param statusCodePredicate a predicate tests a {@link HttpResponse#statusCode() status code}.
+     * @param <T>                 response body type parameter
+     * @return a function.
+     */
+    protected static <T> Function<HttpResponse<T>, T> checkStatusCode(final IntPredicate statusCodePredicate) {
+        Objects.requireNonNull(statusCodePredicate, "statusCodePredicate is null");
         return r -> {
-            final int statusCode = r.statusCode();
-            if (!predicate.test(statusCode)) {
-                throw new RuntimeException("unexpected status code: " + statusCode);
+            final var statusCode = r.statusCode();
+            if (!statusCodePredicate.test(statusCode)) {
+                log.log(Level.ERROR,
+                        () -> String.format("unsuccessful status code: %1$d, request: %2$s, body: %3$s",
+                                               statusCode, r.request(), r.body()));
+                throw new RuntimeException("unsuccessful status code: " + statusCode);
             }
             return r.body();
         };
     }
 
-    protected static <T> Function<HttpResponse<T>, T> check200() {
+    protected static <T> Function<HttpResponse<T>, T> checkStatusCode200() {
         return checkStatusCode(v -> v == 200);
     }
 
-    protected static <U, T> CompletableFuture<T> sendAsync(
-            final HttpClient httpClient, final HttpRequest httpRequest, final HttpResponse.BodyHandler<U> bodyHandler,
-            final Class<U> bodyClass, final Class<T> valueClass) {
+    protected static <T, U> CompletableFuture<U> sendAsyncAndReadJsonValue(
+            final HttpClient httpClient, final HttpRequest httpRequest, final BodyHandler<T> bodyHandler,
+            final Class<T> bodyClass, final Class<U> valueClass) {
         Objects.requireNonNull(httpClient, "httpClient is null");
         Objects.requireNonNull(httpRequest, "httpRequest is null");
         Objects.requireNonNull(bodyClass, "bodyClass is null");
         Objects.requireNonNull(bodyClass, "bodyClass is null");
         Objects.requireNonNull(valueClass, "valueClass is null");
         return httpClient.sendAsync(httpRequest, bodyHandler)
-                .thenApply(check200())
+                .thenApply(checkStatusCode200())
                 .thenApply(b -> Jackson.readValue(valueClass, new Class<?>[]{bodyClass}, b));
     }
 
-    protected static <T> CompletableFuture<T> sendAsync(
+    protected static <T> CompletableFuture<T> sendAsyncAndReadJsonValueFromStringBody(
             final HttpClient httpClient, final HttpRequest httpRequest, final Class<T> valueType) {
-        return sendAsync(httpClient, httpRequest, BodyHandlers.ofString(), String.class, valueType);
+        return sendAsyncAndReadJsonValue(httpClient, httpRequest, BodyHandlers.ofString(), String.class, valueType);
     }
 
     @Override
@@ -93,7 +107,10 @@ public abstract class AbstractClient {
      * @return a value for {@link java.net.http.HttpRequest.Builder#timeout(Duration)}.
      */
     protected Duration timeout() {
-        return Optional.ofNullable(timeout).orElse(DEFAULT_TIMEOUT);
+        if (timeout == null) {
+            return DEFAULT_TIMEOUT;
+        }
+        return timeout;
     }
 
     /**
@@ -102,7 +119,10 @@ public abstract class AbstractClient {
      * @return a value for {@link HttpClient.Builder#connectTimeout(Duration)}.
      */
     protected Duration connectTimeout() {
-        return Optional.ofNullable(connectTimeout).orElse(DEFAULT_CONNECT_TIMEOUT);
+        if (connectTimeout == null) {
+            return DEFAULT_CONNECT_TIMEOUT;
+        }
+        return connectTimeout;
     }
 
     @javax.validation.constraints.NotNull

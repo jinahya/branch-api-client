@@ -10,6 +10,7 @@ import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
 import javax.validation.constraints.AssertTrue;
+import javax.validation.constraints.Max;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
@@ -39,6 +40,26 @@ public class ExportRequest
 
     public static final String PATTERN_REGEXP_RESPONSE_FORMAT
             = '(' + RESPONSE_FORMAT_JSON + '|' + RESPONSE_FORMAT_CSV + ')';
+
+    /**
+     * The maximum value for {@code $.limit} field.
+     */
+    public static final int MAX_LIMIT = 2000000;
+
+    @Override
+    public String toString() {
+        return super.toString() + '{'
+               + "organizationId=" + organizationId
+               + ",reportType=" + reportType
+               + ",startDateLocal=" + startDateLocal
+               + ",endDateLocal=" + endDateLocal
+               + ",timezone=" + timezone
+               + ",fields=" + fields
+               + ",limit=" + limit
+               + ",responseFormat=" + responseFormat
+               + ",filter=" + filter
+               + '}';
+    }
 
     @AssertTrue
     private boolean isStartDateBeforeEndDate() {
@@ -93,10 +114,13 @@ public class ExportRequest
     @NotEmpty
     private Set<@javax.validation.constraints.NotBlank @NotBlank String> fields;
 
+    // branch.io may adjust the maximum value of the 'limit' and that's why the @Max annotations are commented out
+    //@javax.validation.constraints.Max(MAX_LIMIT)
     @javax.validation.constraints.Positive
+    //@Max(MAX_LIMIT)
     @Positive
     @Builder.Default
-    private int limit = 2000000;
+    private int limit = MAX_LIMIT;
 
     @javax.validation.constraints.Pattern(regexp = PATTERN_REGEXP_RESPONSE_FORMAT)
     @Pattern(regexp = PATTERN_REGEXP_RESPONSE_FORMAT)
