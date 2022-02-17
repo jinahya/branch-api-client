@@ -101,5 +101,5 @@ public interface ICustomExportClient
     @NotNull <R> CompletableFuture<R> downloadExportedAndReadLines(
             @javax.validation.Valid @javax.validation.constraints.NotNull
             @Valid @NotNull final ExportStatus exportStatus,
-            final Function<? super Stream<String>, ? extends R> streamFunction);
+            @NotNull final Function<? super Stream<String>, ? extends R> streamFunction);
 }

@@ -53,7 +53,7 @@ public class CustomExportClient
 
     private static final System.Logger log = System.getLogger(CustomExportClient.class.getName());
 
-    private static final String EXPORT_REQUEST_URI = "https://api2.branch.io/v2/logs";
+    public static final String EXPORT_REQUEST_URI = "https://api2.branch.io/v2/logs";
 
     @Override
     public String toString() {

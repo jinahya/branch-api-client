@@ -27,7 +27,7 @@ public class DailyExportClient
 
     private static final System.Logger log = System.getLogger(DailyExportClient.class.getName());
 
-    private static final String EXPORT_REQUEST_URI = "https://api2.branch.io/v3/export";
+    public static final String EXPORT_REQUEST_URI = "https://api2.branch.io/v3/export";
 
     @Override
     public String toString() {
