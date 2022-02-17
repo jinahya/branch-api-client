@@ -1,0 +1,20 @@
+{
+  "eo_branch_cta_view": [
+    "a",
+    "b"
+  ],
+  "eo_click": [],
+  "eo_commerce_event": [],
+  "eo_content_event": [],
+  "eo_custom_event": [],
+  "eo_impression": [],
+  "eo_install": [],
+  "eo_open": [],
+  "eo_pageview": [],
+  "eo_reinstall": [],
+  "eo_sms_sent": [],
+  "eo_user_lifecycle_event": [],
+  "eo_web_session_start": [],
+  "eo_web_to_app_auto_redirect": [],
+  "eo_dismissal": []
+}
